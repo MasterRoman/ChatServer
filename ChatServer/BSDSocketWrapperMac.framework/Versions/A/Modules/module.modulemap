@@ -1,0 +1,11 @@
+framework module BSDSocketWrapperMac {
+  umbrella header "BSDSocketWrapperMac.h"
+
+  export *
+  module * { export * }
+}
+
+module BSDSocketWrapperMac.Swift {
+    header "BSDSocketWrapperMac-Swift.h"
+    requires objc
+}
