@@ -7,5 +7,39 @@
 
 import Foundation
 
-print("Hello, World!")
+
+
+func main(){
+    var server : Server? = nil
+    do{
+        let serverDataSource = ServerDataSource()
+        server = try Server()
+        if (server!.start()){
+            while true {
+                let client = server!.accept()
+                guard let safeClient = client else {
+                    return
+                }
+                let queue = DispatchQueue.global(qos: .utility)
+                queue.async{
+                    do {
+                        let clientHandler = ClientHandler(clientSocket: safeClient, queue: queue, dataSource: serverDataSource)
+                        clientHandler.start()
+                    } catch (let error) {
+                        print(error)
+                        return
+                    }
+                    
+                }
+            }
+        }
+    }
+    catch
+    {
+        server?.close()
+        return
+    }
+}
+
+main()
 
