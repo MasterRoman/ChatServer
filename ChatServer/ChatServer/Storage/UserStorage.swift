@@ -8,14 +8,14 @@
 import Foundation
 
 class UserData{
-    private var chats : Dictionary<UUID,Chat>
-    private var messages : Dictionary<UUID,ChatBody>
+    private var chats : SafeDictionary<UUID,Chat>
+    private var messages : SafeDictionary<UUID,ChatBody>
     private var contacts : [Contact]
     private var credentials : Credentials
     
     init(with login : String) {
-        self.chats = Dictionary<UUID,Chat>()
-        self.messages = Dictionary<UUID,ChatBody>()
+        self.chats = SafeDictionary<UUID,Chat>()
+        self.messages = SafeDictionary<UUID,ChatBody>()
         self.contacts = [Contact]()
         self.credentials = Credentials(login: login, password: "")
     }
