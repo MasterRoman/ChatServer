@@ -26,6 +26,14 @@ class UserData{
         self.messages[id] = ChatBody(chatId: id, messages: [])
     }
     
+    func getChats() -> [Chat]{
+        var chatsArray = [Chat]()
+        for chat in chats {
+            chatsArray.append(chat.value)
+        }
+        return chatsArray
+    }
+    
     func removeChat(by id : UUID){
         chats[id] = nil
     }
@@ -39,8 +47,20 @@ class UserData{
         self.messages[id]?.messages.append(contentsOf: messages.messages)
     }
     
+    func getMessages() -> [ChatBody] {
+        var messagesArray = [ChatBody]()
+        for message in messages {
+            messagesArray.append(message.value)
+        }
+        return messagesArray
+    }
+    
     func addContact(contact : Contact){
         contacts.append(contact)
+    }
+    
+    func getContacts() -> [Contact] {
+        return contacts
     }
     
     func removeContact(by nickname : String){
