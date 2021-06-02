@@ -43,27 +43,39 @@ class ClientHandler{
                 try clientSocket.receive({ data in
                     var res : SendReceiveProtocol
                     do {
-                        res = try decoder.decode(SendReceiveProtocol.self, from: data)
-                        switch res{
-                        case .checkLogin(login: let login):
-                            checkLogin(login: login)
-                        case .registration(credentials : let credentials):
-                            registration(credentials: credentials)
-                        case .authorization(credentials : let credentials):
-                            authorization(credentials: credentials)
-                        case .newChat(chat: let chat):
-                            makeNewChat(chat: chat)
-                        case .newMessage(message: let message):
-                            handleNewMessage(message: message)
-                        case .offline(login: let login):
-                            makeOffline(login: login)
-                        case .newContact(login: let login, contact: let contact):
-                            makeNewContact(by:login,contact:contact!)
+                        if (data.count > 0){
+                            res = try decoder.decode(SendReceiveProtocol.self, from: data)
+                            switch res{
+                            case .checkLogin(login: let login):
+                                checkLogin(login: login)
+                            case .registration(credentials : let credentials):
+                                registration(credentials: credentials)
+                            case .authorization(credentials : let credentials):
+                                authorization(credentials: credentials)
+                            case .newChat(chat: let chat):
+                                makeNewChat(chat: chat)
+                            case .newMessage(message: let message):
+                                handleNewMessage(message: message)
+                            case .offline(login: let login):
+                                makeOffline(login: login)
+                            case .newContact(login: let login, contact: let contact):
+                                makeNewContact(by:login,contact:contact!)
+                            }
+                        }
+                        else
+                        {
+                            do {
+                                try clientSocket.shutdown(with: .shutBoth)
+                                try clientSocket.close()
+                                return
+                            } catch {
+                                return
+                            }
                         }
                     } catch (let error) {
                         print(error)
-                        return
                     }
+                    
                 })
                 
             } catch {
@@ -93,12 +105,14 @@ class ClientHandler{
     
     func checkLogin(login : String){
         var answer : String = ""
-        if (dataSource.usersCredentials.keys.contains(login)){
+        if dataSource.users[login] != nil{
             answer = "BUSY"
         }
         else
         {
-            dataSource.usersCredentials[login] = "WAIT"
+            let user = UserData(with: login)
+            user.setPassword(password: "WAIT")
+            dataSource.users[login] = user
             answer = login
         }
         do{
@@ -110,48 +124,56 @@ class ClientHandler{
     }
     
     func registration(credentials : Credentials){
-        dataSource.usersCredentials[credentials.login] = credentials.password
+        var result = credentials
+        if let localCredentials = dataSource.users[credentials.login] {
+            if (localCredentials.checkPassword(password: "WAIT")){
+                localCredentials.setPassword(password: credentials.password)
+            }
+        } else {
+            result.password = "BUSY"
+        }
+        
         do{
-            try send(message: .registration(credentials: credentials))
+            try send(message: .registration(credentials: result))
         }
         catch (let error){
             print("send failed: \(error)")  //MARK: Think about saving
         }
     }
+    
     
     func authorization(credentials : Credentials){
         var result = "DENIED"
         let login = credentials.login
-        if (dataSource.usersCredentials[login] == credentials.password){
-            result = "APPROVED"
+        if let localCredentials = dataSource.users[login]{
+            if localCredentials.checkPassword(password: credentials.password){
+                result = "APPROVED"
+            }
         }
         
         do{
             try send(message: .authorization(credentials: Credentials(login: result, password: result)))
-            dataSource.activeUsers[login] = clientSocket
+            dataSource.addActiveUser(login: login, socket: clientSocket)
         }
         catch (let error){
             print("send failed: \(error)")  //MARK: Think about saving
         }
         
-        
-        
     }
     
     func makeNewChat(chat : Chat){
-        dataSource.chats[chat.chatBody.chatId] = chat
+        dataSource.addNewChat(chat: chat)
         //MARK: !!!!! SEND TO ALL SENDERS!
-        
     }
     
     func handleNewMessage(message : ChatBody){
-        dataSource.newMessages[message.chatId]?.append(contentsOf: message.messages)
+        dataSource.addNewMessages(messages: message)
         //MARK: !!!!! SEND TO ALL SENDERS!
         
     }
     
     func makeOffline(login : String){
-        dataSource.activeUsers[login] = nil
+        dataSource.removeActiveUser(by: login)
         close()
     }
     
@@ -167,5 +189,9 @@ class ClientHandler{
         
     }
     
-    
 }
+
+
+
+
+
