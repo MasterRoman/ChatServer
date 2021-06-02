@@ -24,7 +24,7 @@ class ClientHandler{
     }
     
     func start(){
-        
+        receive()
     }
     
     func close(){
@@ -37,7 +37,7 @@ class ClientHandler{
         }
     }
     
-    func receive() throws {
+    func receive() {
         while true {
             do{
                 try clientSocket.receive({ data in
@@ -68,8 +68,12 @@ class ClientHandler{
                 
             } catch {
                 print("Session closed")
-                try clientSocket.shutdown(with: .shutBoth)
-                try clientSocket.close()
+                do {
+                    try clientSocket.shutdown(with: .shutBoth)
+                    try clientSocket.close()
+                } catch {
+                    return
+                }
                 return
             }
         }
@@ -117,12 +121,14 @@ class ClientHandler{
     
     func authorization(credentials : Credentials){
         var result = "DENIED"
-        if (dataSource.usersCredentials[credentials.login] == credentials.password){
+        let login = credentials.login
+        if (dataSource.usersCredentials[login] == credentials.password){
             result = "APPROVED"
         }
         
         do{
             try send(message: .authorization(credentials: Credentials(login: result, password: result)))
+            dataSource.activeUsers[login] = clientSocket
         }
         catch (let error){
             print("send failed: \(error)")  //MARK: Think about saving
@@ -135,25 +141,11 @@ class ClientHandler{
     func makeNewChat(chat : Chat){
         dataSource.chats[chat.chatBody.chatId] = chat
         //MARK: !!!!! SEND TO ALL SENDERS!
-        do{
-            try send(message: .newChat(chat: chat))
-        }
-        catch (let error){
-            print("send failed: \(error)")  //MARK: Think about saving
-        }
         
     }
     
     func handleNewMessage(message : ChatBody){
-        // messages[message.chatId]?.append(contentsOf: message.messages)
-        //    let senders = chats[message.chatId]?.senders
-        //    for sender in senders! {
-        
-        //        let client = ActiveUser[sender.senderId]
-        //        guard let sock = client else {
-        //            continue
-        //        }
-        
+        dataSource.newMessages[message.chatId]?.append(contentsOf: message.messages)
         //MARK: !!!!! SEND TO ALL SENDERS!
         
     }
