@@ -13,6 +13,8 @@ func main(){
     var server : Server? = nil
     do{
         let serverDataSource = ServerDataSource()
+        let handler = ServerHandler(dataSource: serverDataSource)
+        serverDataSource.setHandler(handler: handler)
         server = try Server()
         if (server!.start()){
             while true {
