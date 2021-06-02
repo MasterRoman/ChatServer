@@ -52,4 +52,6 @@ class SafeDictionary<K : Hashable,V>: Collection {
         return self.dictionary.index(after: i)
     }
     
+    
+    
 }
