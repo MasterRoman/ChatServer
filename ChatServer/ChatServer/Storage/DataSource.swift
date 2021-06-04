@@ -25,8 +25,6 @@ class ServerDataSource{
     var contacts : SafeDictionary<Login,Contact>
     
     private var activeUsers = SafeDictionary<Login,ClientEndpoint>()
-    private var newChats =  SafeDictionary<UUID,Chat>()
-    private var newMessages = SafeDictionary<UUID,ChatBody>()
     private var offlineTasks = SafeDictionary<Login,UserData>()
     
     
@@ -68,29 +66,31 @@ class ServerDataSource{
     
     func addNewChat(chat : Chat){
         let id = chat.chatBody.chatId
-        newChats[id] = chat
+        self.chats[id] = chat
         
         handler.newChat(chat: chat)
         
-        self.chats[id] = chat
-        
-        newMessages[id] = ChatBody(chatId: id, messages: [])
     }
     
     func removeChat(by id : UUID){
-        newChats[id] = nil
+        self.chats[id] = nil
     }
+    
+    func getChat(by id : UUID) -> Chat{
+        return chats[id]!
+    }
+    
     
     ////////
     
     
     func addNewMessages(messages : ChatBody){
         let id = messages.chatId
-        newMessages[id]!.messages.append(contentsOf: messages.messages)
+        self.chats[id]?.chatBody.messages.append(contentsOf: messages.messages)
         
         handler.newMessage(message: messages)
         
-        self.chats[id]?.chatBody.messages.append(contentsOf: messages.messages)
+     
         ///new every time!!!
     }
     
@@ -124,10 +124,11 @@ class ServerDataSource{
     
     //
     
-    func getChat(by id : UUID) -> Chat{
-        return chats[id]!
+    func addNewContact(contact : Contact,for login : String){
+        
+        
     }
-    
+ 
 
     
     

@@ -173,13 +173,10 @@ class ClientHandler{
     
     func makeNewChat(chat : Chat){
         dataSource.addNewChat(chat: chat)
-        //MARK: !!!!! SEND TO ALL SENDERS!
     }
     
     func handleNewMessage(message : ChatBody){
         dataSource.addNewMessages(messages: message)
-        //MARK: !!!!! SEND TO ALL SENDERS!
-        
     }
     
     func makeOffline(login : String){
@@ -188,6 +185,7 @@ class ClientHandler{
     }
     
     func makeNewContact(by login : String,contact : Contact){
+        dataSource.addNewContact(contact: contact, for: login)
         let contact = dataSource.contacts[login]
         
         do{

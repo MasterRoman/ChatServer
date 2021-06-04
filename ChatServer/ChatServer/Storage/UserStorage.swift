@@ -42,7 +42,7 @@ class UserData{
         let id = messages.chatId
         let chat = chats[id]
         guard let chatToAdd = chat else { return }
-        chatToAdd.chatBody.messages.append(contentsOf: messages.messages)
+  //      chatToAdd.chatBody.messages.append(contentsOf: messages.messages)
         
         self.messages[id]?.messages.append(contentsOf: messages.messages)
     }

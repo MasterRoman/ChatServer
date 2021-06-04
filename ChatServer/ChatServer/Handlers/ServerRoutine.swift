@@ -10,6 +10,7 @@ import BSDSocketWrapperMac
 
 class ServerHandler : Handler{
     
+    
     private let dataSource : ServerDataSource
     
     lazy private var encoder = JSONEncoder()
@@ -29,6 +30,8 @@ class ServerHandler : Handler{
         for index in 1...senders.count - 1 {
             login = senders[index].senderId
             socket = dataSource.getActiveUser(by: login)
+            
+            let copyChat = chat.copy() as! Chat
             if let endPoint = socket{
                 if !send(clientSocket: endPoint, message: .newChat(chat: chat)){
                     //add to offline task ???
@@ -36,7 +39,7 @@ class ServerHandler : Handler{
             }
             else
             {
-                dataSource.addOfflineTask(for: login, task: Task.newChat(chat))
+                dataSource.addOfflineTask(for: login, task: Task.newChat(copyChat))
             }
         }
     }
@@ -65,6 +68,8 @@ class ServerHandler : Handler{
         }
     }
     
+
+    
     func newOnline(login: String, socket: ClientEndpoint) {
         let data = dataSource.getOfflineTask(for: login)
         guard let userData = data else {
@@ -75,6 +80,7 @@ class ServerHandler : Handler{
         for chat in chats{
             if (!send(clientSocket: socket, message: .newChat(chat: chat))){   //MARK: Think about safety
                 dataSource.addOfflineTask(for: login, task: .newChat(chat))
+                break
             }
         }
         
@@ -82,6 +88,7 @@ class ServerHandler : Handler{
         for message in messages{
             if (!send(clientSocket: socket, message: .newMessage(message: message))){   //MARK: Think about safety
                 dataSource.addOfflineTask(for: login, task: .newMessage(message))
+                break
             }
         }
         
@@ -89,6 +96,7 @@ class ServerHandler : Handler{
         for contact in contacts{
             if (!send(clientSocket: socket, message: .newContact(login: login, contact: contact))){   //MARK: Think about safety
                 dataSource.addOfflineTask(for: login, task: .newContact(contact))
+                break
             }
         }
         
