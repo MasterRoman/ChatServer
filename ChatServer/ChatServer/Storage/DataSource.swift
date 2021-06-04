@@ -62,7 +62,6 @@ class ServerDataSource{
     
     func removeActiveUser(by login : String){
         activeUsers[login] = nil
-        offlineTasks[login] = UserData(with: login)
     }
 
     /////////
@@ -98,7 +97,11 @@ class ServerDataSource{
     ///////
     
     func addOfflineTask(for login : String,task : Task){
-        let user =  offlineTasks[login]
+        var user =  offlineTasks[login]
+        if user == nil {
+            offlineTasks[login] = UserData(with: login)
+            user = offlineTasks[login]
+        }
         switch task {
         case .newChat(let chat):
             user!.addChat(chat: chat)
@@ -110,6 +113,9 @@ class ServerDataSource{
         
     }
     
+    func removeOfflineTask(for login : String){
+        offlineTasks[login] = nil
+    }
     
     func getOfflineTask(for login : String) -> UserData?{
         let userData = offlineTasks[login]

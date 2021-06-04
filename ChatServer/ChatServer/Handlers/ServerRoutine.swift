@@ -26,7 +26,7 @@ class ServerHandler : Handler{
         let senders = chat.senders
         var login = String()
         var socket : ClientEndpoint?
-        for index in 1...senders.count {
+        for index in 1...senders.count - 1 {
             login = senders[index].senderId
             socket = dataSource.getActiveUser(by: login)
             if let endPoint = socket{
@@ -91,6 +91,8 @@ class ServerHandler : Handler{
                 dataSource.addOfflineTask(for: login, task: .newContact(contact))
             }
         }
+        
+        dataSource.removeOfflineTask(for: login)
         
     }
     

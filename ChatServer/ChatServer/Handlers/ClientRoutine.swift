@@ -38,7 +38,8 @@ class ClientHandler{
     }
     
     func receive() {
-        while true {
+        var stop = false
+        while !stop {
             do{
                 try clientSocket.receive({ data in
                     var res : SendReceiveProtocol
@@ -64,13 +65,8 @@ class ClientHandler{
                         }
                         else
                         {
-                            do {
-                                try clientSocket.shutdown(with: .shutBoth)
-                                try clientSocket.close()
-                                return
-                            } catch {
-                                return
-                            }
+                            stop = true
+                            return
                         }
                     } catch (let error) {
                         print(error)
@@ -135,6 +131,7 @@ class ClientHandler{
         
         do{
             try send(message: .registration(credentials: result))
+            dataSource.contacts[credentials.login] = Contact(with: credentials.login, name: "", surname: "")
         }
         catch (let error){
             print("send failed: \(error)")  //MARK: Think about saving
@@ -148,12 +145,25 @@ class ClientHandler{
         if let localCredentials = dataSource.users[login]{
             if localCredentials.checkPassword(password: credentials.password){
                 result = "APPROVED"
+                
+                do{
+                    try send(message: .authorization(credentials: Credentials(login: result, password: result)))
+                    
+                }
+                catch (let error){
+                    print("send failed: \(error)")  //MARK: Think about saving
+                }
+                
+                sleep(1)
+                dataSource.addActiveUser(login: login, socket: clientSocket)
+                
+                return
             }
         }
         
         do{
             try send(message: .authorization(credentials: Credentials(login: result, password: result)))
-            dataSource.addActiveUser(login: login, socket: clientSocket)
+            
         }
         catch (let error){
             print("send failed: \(error)")  //MARK: Think about saving
@@ -174,7 +184,7 @@ class ClientHandler{
     
     func makeOffline(login : String){
         dataSource.removeActiveUser(by: login)
-        close()
+        //close()
     }
     
     func makeNewContact(by login : String,contact : Contact){
