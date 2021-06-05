@@ -33,7 +33,7 @@ class ServerHandler : Handler{
             
             let copyChat = chat.copy() as! Chat
             if let endPoint = socket{
-                if !send(clientSocket: endPoint, message: .newChat(chat: chat)){
+                if !send(clientSocket: endPoint, messages: [.newChat(chat: chat)]){
                     //add to offline task ???
                 }
             }
@@ -56,7 +56,7 @@ class ServerHandler : Handler{
                 login = sender.senderId
                 socket = dataSource.getActiveUser(by: login)
                 if let endPoint = socket{
-                    if !send(clientSocket: endPoint, message: .newMessage(message: message)){
+                    if !send(clientSocket: endPoint, messages: [.newMessage(message: message)]){
                         //add to offline task ???
                     }
                 }
@@ -68,7 +68,7 @@ class ServerHandler : Handler{
         }
     }
     
-
+    
     
     func newOnline(login: String, socket: ClientEndpoint) {
         let data = dataSource.getOfflineTask(for: login)
@@ -76,40 +76,39 @@ class ServerHandler : Handler{
             return
         }
         
+        var dataToSend = [SendReceiveProtocol]()
+        
         let chats = userData.getChats()
         for chat in chats{
-            if (!send(clientSocket: socket, message: .newChat(chat: chat))){   //MARK: Think about safety
-                dataSource.addOfflineTask(for: login, task: .newChat(chat))
-                break
-            }
+            dataToSend.append(.newChat(chat: chat))
+            print("\(chat.chatBody.chatId)")
         }
+        
         
         let messages = userData.getMessages()
         for message in messages{
-            if (!send(clientSocket: socket, message: .newMessage(message: message))){   //MARK: Think about safety
-                dataSource.addOfflineTask(for: login, task: .newMessage(message))
-                break
-            }
+            dataToSend.append(.newMessage(message: message))
+            print("message \(message.chatId)")
         }
         
         let contacts = userData.getContacts()
         for contact in contacts{
-            if (!send(clientSocket: socket, message: .newContact(login: login, contact: contact))){   //MARK: Think about safety
-                dataSource.addOfflineTask(for: login, task: .newContact(contact))
-                break
-            }
+            dataToSend.append(.newContact(login: login, contact: contact))
         }
         
-        dataSource.removeOfflineTask(for: login)
+        if send(clientSocket: socket, messages: dataToSend){
+            dataSource.removeOfflineTask(for: login)
+        }
         
     }
     
     
-    func send(clientSocket : ClientEndpoint,message : SendReceiveProtocol) -> Bool {
+    func send(clientSocket : ClientEndpoint,messages : [SendReceiveProtocol]) -> Bool {
         var data : Data
         do {
-            data = try encoder.encode(message)
+            data = try encoder.encode(messages)
             try clientSocket.send(data: data)
+            print("sent \(data.count)")
         } catch (let error) {
             print("failed: \(error)")
             return false

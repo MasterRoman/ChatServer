@@ -90,7 +90,7 @@ class ClientHandler{
     func send(message : SendReceiveProtocol) throws {
         var data : Data
         do {
-            data = try encoder.encode(message)
+            data = try encoder.encode([message])
         } catch (let error) {
             print("encode failed: \(error)")
             return
@@ -145,17 +145,18 @@ class ClientHandler{
         if let localCredentials = dataSource.users[login]{
             if localCredentials.checkPassword(password: credentials.password){
                 result = "APPROVED"
-                
-                do{
-                    try send(message: .authorization(credentials: Credentials(login: result, password: result)))
-                    
-                }
-                catch (let error){
-                    print("send failed: \(error)")  //MARK: Think about saving
+                DispatchQueue.global(qos: .userInitiated).async {
+                    do{
+                        try self.send(message: .authorization(credentials: Credentials(login: result, password: result)))
+                        
+                    }
+                    catch (let error){
+                        print("send failed: \(error)")  //MARK: Think about saving
+                    }
                 }
                 
                 sleep(1)
-                dataSource.addActiveUser(login: login, socket: clientSocket)
+                dataSource.addActiveUser(login: login, socket: self.clientSocket)
                 
                 return
             }

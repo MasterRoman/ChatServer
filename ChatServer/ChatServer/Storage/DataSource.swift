@@ -32,9 +32,17 @@ class ServerDataSource{
     
     
     init() {
+        let userData = UserData(with: "1111")
+        userData.setPassword(password: "1111")
         self.chats = SafeDictionary<UUID,Chat>()
         self.users = SafeDictionary<Login,UserData>()
+        self.users["1111"] = userData
+        let useData = UserData(with: "2222")
+        useData.setPassword(password: "2222")
+        self.users["2222"] = useData
         self.contacts =  SafeDictionary<Login,Contact>()
+        self.contacts["1111"] =  Contact(with: "1111", name: "", surname: "")
+        self.contacts["2222"] =  Contact(with: "2222", name: "", surname: "")
     }
     
     
