@@ -40,11 +40,13 @@ class UserData{
     
     func addMessages(messages : ChatBody){
         let id = messages.chatId
-        let chat = chats[id]
-        guard let chatToAdd = chat else { return }
-  //      chatToAdd.chatBody.messages.append(contentsOf: messages.messages)
+       
+        if self.messages[id] == nil {
+            self.messages[id] = ChatBody(chatId: id, messages: [])
+        }
+
         
-        self.messages[id]?.messages.append(contentsOf: messages.messages)
+        self.messages[id]!.messages.append(contentsOf: messages.messages)
     }
     
     func getMessages() -> [ChatBody] {

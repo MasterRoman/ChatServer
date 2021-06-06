@@ -81,14 +81,12 @@ class ServerHandler : Handler{
         let chats = userData.getChats()
         for chat in chats{
             dataToSend.append(.newChat(chat: chat))
-            print("\(chat.chatBody.chatId)")
         }
         
         
         let messages = userData.getMessages()
         for message in messages{
             dataToSend.append(.newMessage(message: message))
-            print("message \(message.chatId)")
         }
         
         let contacts = userData.getContacts()
@@ -108,7 +106,6 @@ class ServerHandler : Handler{
         do {
             data = try encoder.encode(messages)
             try clientSocket.send(data: data)
-            print("sent \(data.count)")
         } catch (let error) {
             print("failed: \(error)")
             return false
